@@ -1,6 +1,6 @@
 # Sound Scattering from Spheres using Multipole Reexpansion
 
-This directory contains the python implementation described in the paper [1],  a computational technique for the solution of problems of wave scattering from multiple spheres. It uses the theory for the translation and reexpansion of multipole solutions of the Helmholtz equation for fast and exact recursive computation of the matrix elements.
+This directory implements [1], which develops a computational technique for the solution of problems of wave scattering from multiple spheres. It constructs the theory for the translation and reexpansion of multipole solutions of the Helmholtz equation for fast and exact recursive computation of the matrix elements.
 
 [1] Nail A. Gumerov, Ramani Duraiswami; Computation of scattering from   spheres using multipole reexpansion. J. Acoust. Soc. Am. 1 December 2002; 112 (6): 2688–2701. https://doi.org/10.1121/1.1517253
 
