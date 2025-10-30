@@ -65,7 +65,7 @@ def Snm(n, m, k, rpq):  # Gum2002 - Eq10
     return (sp.spherical_jn(n, k * rpq[0]) + 1j * sp.spherical_yn(n, k * rpq[0])) * sph_harm(m, n, rpq[2], rpq[1])
 
 
-def sph_harm(m, n, phi, theta):
+def sph_harm(m, n, phi, theta): # Gumerov sph_harm
     sph = (-1) ** m * np.sqrt((2 * n + 1) / (4 * np.pi) * sp.factorial(n - np.abs(m)) / sp.factorial(n + np.abs(m))) * \
           sp.lpmn(int(np.abs(m)), int(n), np.cos(theta))[0][-1][-1] * np.exp(1j * m * phi)
     return sph
