@@ -263,7 +263,8 @@ def C_in_func(N, rp_p, s, freq, rot=0): #it was "C_in" (ege)
             anm = np.conj(Ynm_gum)
             # Ccoef = anm / Ynm_raf
             # print("phase:\n ", phase)
-            Cnm = anm * 4 * np.pi * (1j)**n * phase / (1j * 2 * np.pi * freq * -rho)
+            # Cnm = anm * 4 * np.pi * (1j)**n * phase / (1j * 2 * np.pi * freq * -rho)
+            Cnm = anm * 4 * np.pi * (1j)**n * phase
             C_input[t-1] = Cnm
     return C_input
 
@@ -286,39 +287,39 @@ def ynm_conj_approx(Cin,n, freq, s, rp_p):
     return(ynm_approx)    
     
     
-def C_in_new(N, rq_p, rq, r, s, freq, rot=0): #it was "C_in" (ege)
-    """ s = rsrc_sph"""
-    rho = 1.225
-    c = 343
-    t_size = (N+1)**2
-    C_input= np.zeros(t_size)*1j
-    k = 2 * np.pi * freq / c
-    src_cart = sph2cart(1, s[1], s[2])
-    k_vec = k*src_cart
-
-    src_inward_sph = cart2sph(-src_cart[0],-src_cart[1],-src_cart[2]) #r,th,phi
-    rq_p_cart = sph2cart(rq_p[0], rq_p[1], rq_p[2])
-    phase = np.exp(-np.sum(k_vec*rq_p_cart)*1j)
-
-    rq, rq_teta, rq_phi = cart2sph_single(rq)
-    rr, r_teta, r_phi  = cart2sph_single(r)
-
-    for n in range(N+1):
-        for m in range(-n, n+1):
-            Ynm_s = sparg_sph_harm(m, n, src_inward_sph[2], src_inward_sph[1])
-            t = (n+1)**2 - (n-m)
-            anm = np.conj(Ynm_s)*np.exp(-1j*rot*m)
-
-            jn_kr = sp.spherical_jn(n, k * r)
-            jn_krq = sp.spherical_jn(n, k * rq)
-
-            Yr = sparg_sph_harm(m, n, r_phi, r_teta)
-            Yq = sparg_sph_harm(m, n, rq_phi, rq_teta)
-
-            Cnm = anm * 4 * np.pi * (1j)**n * phase * Yr * jn_kr / (Yq * jn_krq *1j * 2 * np.pi * freq * -rho)
-
-            # C_input[t-1] = Cnm
-    return Cnm
+# def C_in_new(N, rq_p, rq, r, s, freq, rot=0): #it was "C_in" (ege)
+#     """ s = rsrc_sph"""
+#     rho = 1.225
+#     c = 343
+#     t_size = (N+1)**2
+#     C_input= np.zeros(t_size)*1j
+#     k = 2 * np.pi * freq / c
+#     src_cart = sph2cart(1, s[1], s[2])
+#     k_vec = k*src_cart
+#
+#     src_inward_sph = cart2sph(-src_cart[0],-src_cart[1],-src_cart[2]) #r,th,phi
+#     rq_p_cart = sph2cart(rq_p[0], rq_p[1], rq_p[2])
+#     phase = np.exp(-np.sum(k_vec*rq_p_cart)*1j)
+#
+#     rq, rq_teta, rq_phi = cart2sph_single(rq)
+#     rr, r_teta, r_phi  = cart2sph_single(r)
+#
+#     for n in range(N+1):
+#         for m in range(-n, n+1):
+#             Ynm_s = sparg_sph_harm(m, n, src_inward_sph[2], src_inward_sph[1])
+#             t = (n+1)**2 - (n-m)
+#             anm = np.conj(Ynm_s)*np.exp(-1j*rot*m)
+#
+#             jn_kr = sp.spherical_jn(n, k * r)
+#             jn_krq = sp.spherical_jn(n, k * rq)
+#
+#             Yr = sparg_sph_harm(m, n, r_phi, r_teta)
+#             Yq = sparg_sph_harm(m, n, rq_phi, rq_teta)
+#
+#             Cnm = anm * 4 * np.pi * (1j)**n * phase * Yr * jn_kr / (Yq * jn_krq *1j * 2 * np.pi * freq * -rho)
+#
+#             # C_input[t-1] = Cnm
+#     return Cnm
 
 
 
@@ -435,20 +436,20 @@ def C_multipole(n, freq, s_sph, k, poles, rot):
         C_flat = np.append(C_flat, C)
     return C_flat
 
-def C_multipole_new(n, freq, s_sph, k, poles, rq, r, rot):
-
-    key, values = zip(*poles.items())
-    C_flat = np.array([])
-
-    for keys in itertools.product(values):
-        q = keys[0]
-        rq_p =  q
-        # rq_p_sph = cart2sph(rq_p[0], rq_p[1], rq_p[2])
-        # C = C_in_func(n, rq_p_sph, s_sph, freq, rot)
-        C = C_in_new(n, rq_p, rq, r, s_sph, freq, rot=0)
-        C_flat = np.append(C_flat, C)
-
-    return C_flat
+# def C_multipole_new(n, freq, s_sph, k, poles, rq, r, rot):
+#
+#     key, values = zip(*poles.items())
+#     C_flat = np.array([])
+#
+#     for keys in itertools.product(values):
+#         q = keys[0]
+#         rq_p =  q
+#         # rq_p_sph = cart2sph(rq_p[0], rq_p[1], rq_p[2])
+#         # C = C_in_func(n, rq_p_sph, s_sph, freq, rot)
+#         C = C_in_new(n, rq_p, rq, r, s_sph, freq, rot=0)
+#         C_flat = np.append(C_flat, C)
+#
+#     return C_flat
 
 
 def A_multipole(L, D, n):
@@ -680,13 +681,42 @@ def rotvec(phis, N, Q):
 def rotatemat(MPmat, qrot):
     return qrot @ MPmat 
 
+
+def mesh_row_shift(vsize=50, cm=0.55, shift=0):
+    # if shift < 0:
+    #     r_x, r_y, r_z = np.mgrid[-cm-shift:cm:(vsize * 1j), -cm:cm:(vsize * 1j), 0:0:1j]
+    #     print("grid:", -cm-shift, "to", cm)
+    # else:
+    #     r_x, r_y, r_z = np.mgrid[-cm:cm:(vsize * 1j), -cm-shift:cm-shift:(vsize * 1j), 0:0:1j]
+    #     print("grid:", cm, "to", cm-shift)
+    r_x, r_y, r_z = np.mgrid[-cm - shift:cm - shift:(vsize * 1j), -cm:cm:(vsize * 1j), 0:0:1j]
+    print("grid:", -cm - shift, "to", cm - shift)
+    mesh_row = np.stack((r_x.ravel(), r_y.ravel(), r_z.ravel()), axis=1)
+    return(mesh_row)
+
+
+def mesh_row_center(center_x, cm=0.55, vsize=50):
+    """Square 2-D mesh centred on `center_x` in the global frame."""
+    r_x, r_y, r_z = np.mgrid[
+                    center_x - cm: center_x + cm: (vsize * 1j),
+                    -cm:  cm: (vsize * 1j),
+                    0:  0: 1j
+                    ]
+    return np.stack((r_x.ravel(), r_y.ravel(), r_z.ravel()), axis=1)
+
 if __name__=='__main__':
-    n = 3 #Spherical Harmonic Order
+
+    import matplotlib.patches as patches
+
+    n = 5 #Spherical Harmonic Order
     # a = 42e-3   #Radius of sphere
-    a = 8e-2   #Radius of sphere
-    f = 2000    #Freq
+    # a = 8e-2   #Radius of sphere
+    a = 0.155  #Radius of sphere
+    f = 1500   #Freq
+    w = 2 * np.pi * f
     c = 343     #Speed of sound
     k = 2*np.pi*f/c #wave number
+    rho = 1.225  #Density of air
     order = n  # Spherical Harmonic Order for L matrix
     # 
     jhnp = []
@@ -706,7 +736,7 @@ if __name__=='__main__':
     """ SCENE SETUP """
     center_x, center_y = 1., 1.
     # mics = {1: mic_loc(0.5, 0, 1), 2: mic_loc(1.5, 0.0, -1), 3: mic_loc(-0.5, 0, 3)}
-    mics = {1: mic_loc(-0.2, 0, 0), 2: mic_loc(0.2, 0, 0)}
+    mics = {1: mic_loc(-0.5, 0, 0), 2: mic_loc(0.5, 0, 0)}
     p,q = mics.get(1), mics.get(2)
     middle = 0.5*(p+q)
     source_distance = np.linalg.norm(middle-source)
@@ -718,16 +748,17 @@ if __name__=='__main__':
 
     ar,br,cr = list(zip(rsrc))
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')  # Correctly set up 3D projection
-    ax.scatter(ad, bd, cd, s=100, label='Microphone Locations')
-    ax.scatter(ar, br, cr, c="r", s=250, label='Source Location')
-    ax.set_xlabel('X Coordinate')
-    ax.set_ylabel('Y Coordinate')
-    ax.set_zlabel('Z Coordinate')
-    ax.set_title('3D Scatter Plot of Microphones and Source')
-    ax.legend()
-    plt.show()
+    if False:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')  # Correctly set up 3D projection
+        ax.scatter(ad, bd, cd, s=100, label='Microphone Locations')
+        ax.scatter(ar, br, cr, c="r", s=250, label='Source Location')
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.set_zlabel('Z Coordinate')
+        ax.set_title('3D Scatter Plot of Microphones and Source')
+        ax.legend()
+        plt.show()
 
     size = (n + 1) ** 2
 
@@ -741,10 +772,10 @@ if __name__=='__main__':
     _, Anm_all = A_multipole(L, D, n)
     
     """ Step 3  """
-    presmulti = pressure_withA_multipole(n, a, k, Anm_all, no_of_rsmas)
-    Anm_tilde = pressure_to_Anm(presmulti, n, no_of_rsmas, k, a)
-    D_tilde = Anm_to_D(Anm_tilde, L)
-    C_in_tilde = D_to_Cin(D_tilde, mics, jhnp, n)
+    # presmulti = pressure_withA_multipole(n, a, k, Anm_all, no_of_rsmas)
+    # Anm_tilde = pressure_to_Anm(presmulti, n, no_of_rsmas, k, a)
+    # D_tilde = Anm_to_D(Anm_tilde, L)
+    # C_in_tilde = D_to_Cin(D_tilde, mics, jhnp, n)
 
     """ Step 3.5 Rotation """
     """
@@ -804,103 +835,143 @@ if __name__=='__main__':
     plt.show()
     """
 
-    def mesh_row_shift(vsize=50, cm=0.55, shift=0):
-        # if shift < 0:
-        #     r_x, r_y, r_z = np.mgrid[-cm-shift:cm:(vsize * 1j), -cm:cm:(vsize * 1j), 0:0:1j]
-        #     print("grid:", -cm-shift, "to", cm)
-        # else:
-        #     r_x, r_y, r_z = np.mgrid[-cm:cm:(vsize * 1j), -cm-shift:cm-shift:(vsize * 1j), 0:0:1j]
-        #     print("grid:", cm, "to", cm-shift)
-        r_x, r_y, r_z = np.mgrid[-cm - shift:cm - shift:(vsize * 1j), -cm:cm:(vsize * 1j), 0:0:1j]
-        print("grid:", -cm - shift, "to", cm - shift)
-        mesh_row = np.stack((r_x.ravel(), r_y.ravel(), r_z.ravel()), axis=1)
-        return(mesh_row)
-
-
-    def mesh_row_center(center_x, cm=0.55, vsize=50):
-        """Square 2-D mesh centred on `center_x` in the global frame."""
-        r_x, r_y, r_z = np.mgrid[
-                        center_x - cm: center_x + cm: (vsize * 1j),
-                        -cm:  cm: (vsize * 1j),
-                        0:  0: 1j
-                        ]
-        return np.stack((r_x.ravel(), r_y.ravel(), r_z.ravel()), axis=1)
-
+    import matplotlib.animation as animation
+    from matplotlib.animation import PillowWriter  # Or FFMpegWriter
 
     """ Step 4: Testing Cin """
     """ mesh grid for measurement points """
-    rc = 0.5  # extrapolation range in meters
+    rc = 1  # extrapolation range in meters
     cm = rc + 0.05  # side of counter map's square in meter
     vsize = 50  # number of pressure calculations along one side for contour plot
     r_x, r_y, r_z = np.mgrid[-cm:cm:(vsize * 1j), -cm:cm:(vsize * 1j), 0:0:1j]
+    r_x_2D, r_y_2D = np.mgrid[-cm:cm:(vsize * 1j), -cm:cm:(vsize * 1j)]
+
     mesh_row = np.stack((r_x.ravel(), r_y.ravel(), r_z.ravel()), axis=1)
 
+    # Create a 2D grid of points at z=0, centered at the global origin
     global_mesh = mesh_row_center(0.0)  # one grid for plotting
+
     rel_mesh_p = global_mesh - p  # r  relative to sphere 1
     rel_mesh_q = global_mesh - q  # r  relative to sphere 2
 
+    # --- 1. Calculate Incident Pressure (p_in) ---
+    # We define the incident field directly as a plane wave
+
+    s = rsrc_sph  # Source spherical coordinates
+    src_cart = sph2cart(1, s[1], s[2])  # Plane wave direction vector
+    k_vec = k * src_cart
+
+    # pressure_p1_cin = pfield_sphsparg(f, k, mesh_row, n, c1_tilde_orj)
+    # psi_in = exp(i * k . r) for each point r in the global mesh
+    psi_in_mesh = np.exp(1j * np.dot(global_mesh, k_vec))
+
+    # p_in = -i * w * rho * psi_in
+    incident_pressure = -1j * w * rho * psi_in_mesh
+
+    # --- 2. Calculate Scattered Pressure (p_scat) ---
 
     o = (n + 1) ** 2  # order = n, block sizes
+    a1 = Anm_all[0:o]  # Coefficients for sphere 1
+    a2 = Anm_all[o:2 * o]  # Coefficients for sphere 2
 
-    a1_tilde = Anm_tilde[0:o]
-    a2_tilde = Anm_tilde[o:2 * o]
+    # pfield_from_A calculates the scattered *potential* (psi_p) from one sphere
+    # psi_scat = psi_1 + psi_2
+    psi_scat_1 = pfield_from_A(f, k, rel_mesh_p, n, a1, a)
+    psi_scat_2 = pfield_from_A(f, k, rel_mesh_q, n, a2, a)
 
-    pressure_a1 = pfield_from_A(f, k, rel_mesh_p, n, a1_tilde, a)
-    pressure_a2 = pfield_from_A(f, k, rel_mesh_q, n, a2_tilde, a)
+    scattered_potential = psi_scat_1 + psi_scat_2
+    # p_scat = -i * w * rho * psi_scat
+    scattered_pressure = -1j * w * rho * scattered_potential
 
-    scattered = pressure_a1 + pressure_a2
+    # --- 3. Calculate Total Pressure (p_total) ---
+    # p_total = p_in + p_scat
+    # total_pressure = incident_pressure + scattered_pressure
+    total_pressure = scattered_pressure
 
-    c1_tilde = C_in_tilde[0:o]
-    c2_tilde = C_in_tilde[o:2*o]
-
-    c1_tilde_orj = C_in[0:o]  # trying original C_in instead of C_in_tilde
-    c2_tilde_orj = C_in[o:2*o]
-
-    pressure_p1_cin = pfield_sphsparg(f, k, mesh_row, n, c1_tilde_orj)
-    # pressure_p1_cin_tilde = pfield_sphsparg(f, k, mesh_row, n, c1_tilde)
-    # pressure_p1_c1_tilde_rot = pfield_sphsparg(f, k, mesh_row, n, c1_tilde_rot)
-
-    # pressure_p1_c2_tilde_rot = pfield_sphsparg(f, k, mesh_row, n, c2_tilde_rot)
+    # --- 4. Plot the Fields ---
     vmin, vmax = -1.5, 2  # Set colorbar limits
+    vmin, vmax = -5, 5  # Set common colorbar limits
 
-    # ax1 = plot_contour(pressure_p1_c2_tilde_rot, cm, vsize, vmin=vmin, vmax=vmax)  # contour plot
-    # plt.title("pressure using c2_tilde_rot")
+    # --- Setup the Figure ---
+    # We will animate the "Total Pressure" plot
+    fig, ax_tot = plt.subplots(figsize=(8, 7))
 
-    ax2 = plot_contour(pressure_p1_cin, cm, vsize, vmin=vmin, vmax=vmax)  # contour plot
-    plt.title("Pressure using c1_tilde_orj")
+    # Calculate the t=0 frame
+    pressure_real_t0 = total_pressure.real
 
-    # ax3 = plot_contour(pressure_p1_cin_tilde, cm, vsize, vmin=vmin, vmax=vmax)  # contour plot
-    # plt.title("Pressure using c1_tilde")
+    # Reshape for plotting
+    pressure_shaped = pressure_real_t0.reshape(vsize, vsize)
 
-    # ax4 = plot_contour(pressure_p1_c1_tilde_rot, cm, vsize, vmin=vmin, vmax=vmax)  # contour plot
-    # plt.title("Pressure using c1_tilde_rot")
+    # Plot the initial frame (t=0)
+    # We store the output of contourf in 'cax' so we can update it
+    cax = ax_tot.contourf(r_x_2D, r_y_2D, pressure_shaped, cmap="jet", vmin=vmin, vmax=vmax, levels=50)
 
-    # ax5 = plot_contour(pressure_a1_p1_tilde, cm, vsize, vmin=vmin, vmax=vmax, shift=p[0])  # contour plot
-    # plt.title("scattered field a1_tilde")
+    ax_tot.set_aspect("equal")
+    ax_tot.set_title("Total Pressure ($p_{total}$)")
+    fig.colorbar(cax, ax=ax_tot)
 
-    # ax6 = plot_contour(pressure_a2_p1_tilde, cm, vsize, vmin=vmin, vmax=vmax, shift=q[0])  # contour plot
-    # plt.title("scattered field a2_tilde")
+    # ax_tot.set_title("Total Pressure ($p_{total} = p_{in} + p_{scat}$)")
+    for center_coord in mics.values():
+        x_center, y_center = center_coord[0], center_coord[1]
+        sphere_circle = patches.Circle((x_center, y_center), a, fill=True, color='white', ec='black', zorder=10)
+        ax_tot.add_patch(sphere_circle)
 
-    total = scattered + pressure_p1_cin  # total field
-    print(np.abs(scattered).min(), np.abs(scattered).max())
-    print(np.abs(pressure_p1_cin).min(), np.abs(pressure_p1_cin).max())
+    # --- 5. Animation Setup ---
 
-    # scattered =  pressure_a1
+    # Calculate the TRUE period of one wave cycle
+    no_of_cycles = 3
+    T_period = no_of_cycles * 1.0 / f  # e.g., 1 / 2000 = 0.0005 seconds
 
-    ax6 = plot_contour(total, cm, vsize, vmin=vmin, vmax=vmax)  # contour plot
-    plt.title("total scattered field a1+a2 + incident field")
+    animation_duration_sec = 2  # We will stretch the animation to 2 seconds
+    animation_fps = 20  # Use a smoother 30 fps
+    total_frames = animation_duration_sec * animation_fps
 
-    plt.show()
-    # pp5 = pressure_p1_cin_tilde.real
-    # plt.imshow(pp5.reshape(50,50))
+    w = 2 * np.pi * f  # Angular frequency (from your f)
 
-    # print("C-input")
-    # print(C_in)
-    # print("C-output")
-    # print(C_in_tilde)
-    # print("Diff")
+    print("--- Starting Animation Render ---")
+    print(f"Duration: {animation_duration_sec}s, FPS: {animation_fps}, Total Frames: {total_frames}")
 
-    # C_diff = C_in - C_in_tilde
-    # print(DataFrame(C_diff))
-    # print("magnitude Diff")
-    # print(DataFrame(np.linalg.norm(C_diff[i]) for i in range(len(C_diff))))
+
+    # This function is called for each frame
+    def animate(frame):
+        # Calculate the current time 't' for this frame
+        t = (frame / total_frames) * T_period
+
+        # Calculate the time-dependent field: P(r, t) = Re{ p(r) * exp(i*w*t) }
+        time_phasor = np.exp(1j * w * t)
+        pressure_t = (total_pressure * time_phasor).real
+
+        # Reshape for plotting
+        pressure_shaped_t = pressure_t.reshape(vsize, vsize)
+
+        # Update the plot's data
+        # This is the most complex part. We have to clear the old
+        # contour and draw a new one.
+        global cax
+        for c in cax.collections:
+            c.remove()  # Remove old contour levels
+
+        cax = ax_tot.contourf(r_x_2D, r_y_2D, pressure_shaped_t, cmap="jet", vmin=vmin, vmax=vmax, levels=50)
+        ax_tot.set_title(f"Total Pressure at t = {t:.3f} s")
+
+        return cax.collections
+
+
+    # Create the animation object
+    # interval = 1000 / animation_fps
+    ani = animation.FuncAnimation(fig, animate, frames=total_frames,
+                                  interval=(1000 / animation_fps), blit=False)
+
+    # Save the animation as a GIF or MP4
+    # (This may take a minute or two)
+    # You might need to install 'imagemagick' for GIF or 'ffmpeg' for MP4
+
+    # Save as GIF
+    ani.save('scattering_animation.gif', writer=PillowWriter(fps=animation_fps))
+    print("Saved scattering_animation.gif")
+
+    # Or save as MP4 (often better quality and smaller)
+    # ani.save('scattering_animation.mp4', writer='ffmpeg', fps=animation_fps)
+    # print("Saved scattering_animation.mp4")
+
+    plt.show()  # This will now show the interactive animation
