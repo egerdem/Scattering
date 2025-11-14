@@ -1,6 +1,6 @@
 import numpy as np
 import Microphone as mc
-from multi_theoritical_r3_ege import *
+from sphere_scattering import *
 
 
 n = 2  #Spherical Harmonic Order

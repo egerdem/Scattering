@@ -12,6 +12,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib
 matplotlib.use('Qt5Agg')
 
+#adapted from years ago's sphere_scattering.py
+
 def planewave(freq, ra, A, thetas, phis, Nmax):
     """
 
@@ -708,11 +710,21 @@ if __name__=='__main__':
 
     import matplotlib.patches as patches
 
-    n = 5 #Spherical Harmonic Order
+    # n = 6 #Spherical Harmonic Order
+
     # a = 42e-3   #Radius of sphere
     # a = 8e-2   #Radius of sphere
+    c = 343     #Speed of sound
     a = 0.155  #Radius of sphere
-    f = 1500   #Freq
+    f = 500   #Freq
+    k = 2 * np.pi * f / c
+    wavelength = c / f
+    print("freq, wavelength [m]:", f, wavelength)
+    print("radius/wavelength:", a/wavelength)
+
+    N_test = int(np.ceil(k*a)) + 1
+    print("N_test:", N_test)
+    n = N_test + 1
     w = 2 * np.pi * f
     c = 343     #Speed of sound
     k = 2*np.pi*f/c #wave number
@@ -732,21 +744,25 @@ if __name__=='__main__':
     rs = source # mic_sub(source, np.array([0, 0, 0]))
     rsrc = source # mic_sub(source, np.array([0, 0, 0])) # source coordinates
     rsrc_sph = cart2sph(rs[0], rs[1], rs[2]) # source coordinates in spherical coors.
+    ar,br,cr = list(zip(rsrc))
 
     """ SCENE SETUP """
-    center_x, center_y = 1., 1.
-    # mics = {1: mic_loc(0.5, 0, 1), 2: mic_loc(1.5, 0.0, -1), 3: mic_loc(-0.5, 0, 3)}
-    mics = {1: mic_loc(-0.5, 0, 0), 2: mic_loc(0.5, 0, 0)}
-    p,q = mics.get(1), mics.get(2)
-    middle = 0.5*(p+q)
-    source_distance = np.linalg.norm(middle-source)
-    print("distance btw. source and mics' middle point:", source_distance)
-    key, values = zip(*mics.items())
-    ad,bd,cd = list(zip(*values))
-    
-    no_of_rsmas = max(key) # = 3
+    # --- Define your spheres here ---
+    # mics = {1: mic_loc(-0.5, 0, 0)}
+    mics = {1: mic_loc(-0.3, 0, 0), 2: mic_loc(0.3, 0, 0)}
+    # --------------------------------
 
-    ar,br,cr = list(zip(rsrc))
+    sphere_centers = list(mics.values())
+    no_of_rsmas = len(sphere_centers)
+
+    # Get coordinates for 3D plot
+    ad,bd,cd = list(zip(*sphere_centers))
+
+    # Calculate the geometric center of all spheres
+    middle = np.mean(sphere_centers, axis=0)
+    source_distance = np.linalg.norm(middle-source)
+    print(f"Simulating {no_of_rsmas} sphere(s).")
+    print("distance btw. source and sphere centroid:", source_distance)
 
     if False:
         fig = plt.figure()
@@ -770,7 +786,7 @@ if __name__=='__main__':
     """ L_multipole returns: Reexpansion coefficient (SR) multipoles" """
     L = L_multipole(order, a, k, mics) # ord = 2 = spherical Harmonic Order for L matrix   
     _, Anm_all = A_multipole(L, D, n)
-    
+
     """ Step 3  """
     # presmulti = pressure_withA_multipole(n, a, k, Anm_all, no_of_rsmas)
     # Anm_tilde = pressure_to_Anm(presmulti, n, no_of_rsmas, k, a)
@@ -840,7 +856,7 @@ if __name__=='__main__':
 
     """ Step 4: Testing Cin """
     """ mesh grid for measurement points """
-    rc = 1  # extrapolation range in meters
+    rc = 0.7  # extrapolation range in meters
     cm = rc + 0.05  # side of counter map's square in meter
     vsize = 50  # number of pressure calculations along one side for contour plot
     r_x, r_y, r_z = np.mgrid[-cm:cm:(vsize * 1j), -cm:cm:(vsize * 1j), 0:0:1j]
@@ -849,10 +865,8 @@ if __name__=='__main__':
     mesh_row = np.stack((r_x.ravel(), r_y.ravel(), r_z.ravel()), axis=1)
 
     # Create a 2D grid of points at z=0, centered at the global origin
-    global_mesh = mesh_row_center(0.0)  # one grid for plotting
+    global_mesh = mesh_row_center(0.0, cm=cm, vsize=vsize)  # one grid for plotting
 
-    rel_mesh_p = global_mesh - p  # r  relative to sphere 1
-    rel_mesh_q = global_mesh - q  # r  relative to sphere 2
 
     # --- 1. Calculate Incident Pressure (p_in) ---
     # We define the incident field directly as a plane wave
@@ -871,22 +885,33 @@ if __name__=='__main__':
     # --- 2. Calculate Scattered Pressure (p_scat) ---
 
     o = (n + 1) ** 2  # order = n, block sizes
-    a1 = Anm_all[0:o]  # Coefficients for sphere 1
-    a2 = Anm_all[o:2 * o]  # Coefficients for sphere 2
 
-    # pfield_from_A calculates the scattered *potential* (psi_p) from one sphere
-    # psi_scat = psi_1 + psi_2
-    psi_scat_1 = pfield_from_A(f, k, rel_mesh_p, n, a1, a)
-    psi_scat_2 = pfield_from_A(f, k, rel_mesh_q, n, a2, a)
+    # Initialize total scattered potential
+    scattered_potential = np.zeros(global_mesh.shape[0], dtype=complex)
 
-    scattered_potential = psi_scat_1 + psi_scat_2
+    # Loop over each sphere, calculate its scattered field, and add it
+    for i in range(no_of_rsmas):
+        sphere_center = sphere_centers[i]
+
+        # Get coordinates relative to this sphere's center
+        rel_mesh = global_mesh - sphere_center
+
+        # Get the coefficients for this sphere
+        a_i = Anm_all[i * o: (i + 1) * o]
+
+        # Calculate this sphere's scattered potential (psi_p)
+        psi_scat_i = pfield_from_A(f, k, rel_mesh, n, a_i, a)
+
+        # Add it to the total
+        scattered_potential += psi_scat_i
+
     # p_scat = -i * w * rho * psi_scat
     scattered_pressure = -1j * w * rho * scattered_potential
 
     # --- 3. Calculate Total Pressure (p_total) ---
     # p_total = p_in + p_scat
-    # total_pressure = incident_pressure + scattered_pressure
-    total_pressure = scattered_pressure
+    total_pressure = incident_pressure + scattered_pressure
+    # total_pressure = scattered_pressure
 
     # --- 4. Plot the Fields ---
     vmin, vmax = -1.5, 2  # Set colorbar limits
@@ -919,7 +944,7 @@ if __name__=='__main__':
     # --- 5. Animation Setup ---
 
     # Calculate the TRUE period of one wave cycle
-    no_of_cycles = 3
+    no_of_cycles = 1
     T_period = no_of_cycles * 1.0 / f  # e.g., 1 / 2000 = 0.0005 seconds
 
     animation_duration_sec = 2  # We will stretch the animation to 2 seconds
@@ -952,7 +977,7 @@ if __name__=='__main__':
             c.remove()  # Remove old contour levels
 
         cax = ax_tot.contourf(r_x_2D, r_y_2D, pressure_shaped_t, cmap="jet", vmin=vmin, vmax=vmax, levels=50)
-        ax_tot.set_title(f"Total Pressure at t = {t:.3f} s")
+        ax_tot.set_title(f"Total Pressure at t = {t:.3f} s, freq = {f} Hz, sh order = {n}")
 
         return cax.collections
 
@@ -971,7 +996,7 @@ if __name__=='__main__':
     print("Saved scattering_animation.gif")
 
     # Or save as MP4 (often better quality and smaller)
-    # ani.save('scattering_animation.mp4', writer='ffmpeg', fps=animation_fps)
+    ani.save('scattering_animation.mp4', writer='ffmpeg', fps=animation_fps)
     # print("Saved scattering_animation.mp4")
 
     plt.show()  # This will now show the interactive animation

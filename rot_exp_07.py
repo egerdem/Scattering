@@ -3,7 +3,7 @@ from convertangle import cart2sph_single, cart2sphr, sph2cart
 from scipy.special import sph_harm, lpmv, spherical_jn, spherical_yn
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from multi_theoritical_r3_ege import *
+from sphere_scattering import *
 
 """ pressure contours for NEW Cin (sadeleşmemiş Ynm'ler ile) and Cin_tilde's """
 
